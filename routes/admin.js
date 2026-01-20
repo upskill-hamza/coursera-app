@@ -1,8 +1,9 @@
 const Router = require("express")
 const adminRouter = Router();
-const {adminModel} = require("../db")
+const {adminModel, courseModel} = require("../db")
 const jwt = require('jsonwebtoken')
-const JWT_ADMIN_PASSWORD = "yehabhikuchbhi"
+const JWT_ADMIN_PASSWORD = require('../config');
+const { adminMiddleware } = require("../middleware/admin");
 
 
 adminRouter.post("/signup", async (req, res) => { 
@@ -45,24 +46,58 @@ adminRouter.post("/signin", async (req, res) => {
 
 })
 
-adminRouter.post("/course", (req, res) => { 
+adminRouter.post("/course", adminMiddleware, async (req, res) => { 
     
+    const adminId = req.userId  //this userId is coming from adminMiddleware    
+
+    const {title, description, imageUrl, price} = req.body
+    
+    const course = await courseModel.create({
+        title,
+        description, 
+        imageUrl, 
+        price,
+        creatorId: adminId
+    })
     res.json({
-        message: "course endpoint"
+        message: "course created",
+        courseId : course._id
     })
 })
 
-adminRouter.put("/course", (req, res) => { 
+adminRouter.put("/course", adminMiddleware, async (req, res) => { 
     
+    const adminId = req.userId
+    
+    const {title, description, imageUrl, price, courseId} = req.body
+
+    const course = await courseModel.updateOne({
+        _id : courseId,
+        creatorId : adminId  //this checks if the couorse id of the course mathces with the admin id who is requesting to update the course 
+    }, {
+        title: title,
+        description: description,
+        imageUrl: imageUrl,
+        price: price
+    })
+
     res.json({
-        message: "course endpoint"
+        message: "course updated",
+        courseId : course._id
     })
 })
 
-adminRouter.get("/course/bulk", (req, res) => { 
+adminRouter.get("/course/bulk",adminMiddleware, async (req, res) => { 
     
+    const adminId = req.userId
+
+    const courses = await courseModel.find({
+        creatorId: adminId
+
+    })
     res.json({
-        message: "course endpoint"
+        message: "Courses endpoint",
+        courses
     })
 })
 

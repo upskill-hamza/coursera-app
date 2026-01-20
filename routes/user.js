@@ -1,9 +1,8 @@
 const Router = require("express")
-const {userModel } = require('../db')
+const {userModel, purchaseModel, courseModel } = require('../db')
 const userRouter = Router();
-const jwt = require('jsonwebtoken')
-const JWT_USER_PASSWORD = "anything"
-
+const  {JWT_USER_PASSWORD } = require("../config");
+const { userMiddleware } = require("../middleware/user");
 
 userRouter.post("/signup", async function (req, res) {
     const {email, password, firstName, lastName} = req.body  // add zod validation
@@ -46,10 +45,34 @@ userRouter.post("/signin", async function (req, res) {
     }
 })
 
-userRouter.get("/purchases", function (req, res) {
-    res.json({
-        message: "signup endpoint"
+userRouter.get("/purchases", userMiddleware, async function (req, res) {
 
+    const userId = req.userId
+
+    const purchases = await purchaseModel.find({
+        userId
+    })
+
+    // let purchasedCourseIds = []
+
+    // for (let i = 0; i < purhcases.length; i++) {
+    //     purchasedCourseIds.push(purchases[i].courseId)
+        
+    // }
+    // const coursesData = await courseModel.find({
+    //     _id : {$in: purchasedCourseIds}
+    // })
+
+    const coursesData = await courseModel.find({
+        _id : {
+            $in: purchases.map(x => x.courseId)
+        }
+    })
+
+
+    res.json({
+        purchases,
+        coursesData
     })
 })
 

@@ -25,8 +25,8 @@ const userSchema = new Schema({
 const courseSchema = new Schema({
     title: String,
     description: String,
-    price: Number,
     imageUrl: String,
+    price: Number,
     creatorId: ObjectId
 })
 
